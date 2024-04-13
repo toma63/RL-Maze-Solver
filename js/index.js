@@ -1,18 +1,37 @@
-var canvas = document.getElementById('maze-canvas');
-var ctx = canvas.getContext('2d');
+class Maze {
+    constructor(rows = 10, cols = 10) {
+        this.rows = rows;
+        this.cols = cols;
+    }
 
-var gridWidth = canvas.width / 10;
-var gridHeight = canvas.height / 10;
+    display(gridSize = 100) {
+        this.canvas = document.getElementById('maze-canvas');
+        this.canvas.width = this.cols * gridSize;
+        this.canvas.height = this.rows * gridSize;
+        this.gridSize = gridSize;
 
-for (var x = 0; x <= canvas.width; x += gridWidth) {
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, canvas.height);
+        /* Make the heading the same width as the canvas*/
+        let heading = document.getElementById('main-heading');
+        heading.style.width = window.getComputedStyle(this.canvas).width;
+
+        this.ctx = this.canvas.getContext('2d');
+
+        for (let x = 0; x <= this.canvas.width; x += gridSize) {
+            this.ctx.moveTo(x, 0);
+            this.ctx.lineTo(x, this.canvas.height);
+        }
+
+        for (let y = 0; y <= this.canvas.height; y += gridSize) {
+            this.ctx.moveTo(0, y);
+            this.ctx.lineTo(this.canvas.width, y);
+        }
+
+        this.ctx.strokeStyle = "#ddd";  // Grid default line color
+        this.ctx.stroke();
+    }
 }
 
-for (var y = 0; y <= canvas.height; y += gridHeight) {
-    ctx.moveTo(0, y);
-    ctx.lineTo(canvas.width, y);
-}
+mz = new Maze();
+mz.display();
 
-ctx.strokeStyle = "#ddd";  // Grid line color
-ctx.stroke();
+
