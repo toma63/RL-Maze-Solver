@@ -20,7 +20,13 @@ class Maze {
     }
 
     initDisplay(gridSize = 100) {
-        this.canvas = document.getElementById('maze-canvas');
+        let canvasContainer = document.getElementById('canvas-container');
+        let oldCanvas = document.getElementById('maze-canvas');
+        let newCanvas = document.createElement('canvas');
+        canvasContainer.replaceChild(newCanvas, oldCanvas);
+        this.canvas = newCanvas;
+        this.canvas.setAttribute('id', 'maze-canvas');
+
         this.canvas.width = this.cols * gridSize;
         this.canvas.height = this.rows * gridSize;
         this.gridSize = gridSize;
@@ -59,11 +65,6 @@ class Maze {
         // reinitialize
         this.cellMatrix = Array.from({ length: this.rows }, 
             () => Array(this.cols).fill(0));
-        let newCanvas = document.createElement('canvas');
-        let canvasParent = this.canvas.parentNode;
-        canvasParent.replaceChild(newCanvas, this.canvas);
-        this.canvas = newCanvas;
-        this.canvas.setAttribute('id', 'maze-canvas');
         this.initDisplay();
         this.makeDisplayGrid();
 
