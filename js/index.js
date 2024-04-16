@@ -49,14 +49,28 @@ class Maze {
         return mazeCell;
     }
 
+    // make a maze, drawing lines between centers of cells
     makeMaze(start = new MazeCell(0, 0, this)) {
+        if (this.mazeCreated) {
+            return false;
+        }
+        this.ctx.beginPath();
+        this.ctx.strokeStyle = "#00d";
         let currentCell = start;
+        this.ctx.moveTo(...currentCell.displayCenterLoc());
         do {
             this.placeCell(currentCell);
             currentCell = currentCell.randomStep();
-            console.log(currentCell);
-        } while (currentCell);
+            if (currentCell) {
+                this.ctx.lineTo(...currentCell.displayCenterLoc());
+                console.log(currentCell);
+            }
+        } while (currentCell); // returns false when enclosed
+        this.ctx.stroke();
+        this.mazeCreated = true;
+        return true;
     }
+
 }
 
 class MazeCell {
@@ -69,15 +83,23 @@ class MazeCell {
 
     static moves = [{ x: 0, y: 1 }, { x: 1, y: 0 }, { x: 0, y: -1 }, { x: -1, y: 0 }];
 
+    // display coordinates for the center of the cell
+    displayCenterLoc() {
+        let centerDelta = this.maze.gridSize / 2;
+        let result = [this.x * this.maze.gridSize + centerDelta, this.y * this.maze.gridSize + centerDelta];
+        console.log(result);
+        return result;
+    }
+
     step(move) {
         return new MazeCell(this.x + move.x, this.y + move.y, this.maze);
     }
 
     enclosed() {
-        return ((this.x > 0 && this.maze.cellMatrix[this.y][this.x - 1]) &&
-                (this.x < this.maze.cols - 1 && this.maze.cellMatrix[this.y][this.x + 1]) &&
-                (this.y > 0 && this.maze.cellMatrix[this.y - 1][this.x]) &&
-                (this.y < this.maze.rows - 1 && this.maze.cellMatrix[this.y + 1][this.x])) ;
+        return ((this.x === 0 || this.maze.cellMatrix[this.y][this.x - 1]) &&
+                (this.x === this.maze.cols - 1 || this.maze.cellMatrix[this.y][this.x + 1]) &&
+                (this.y === 0 || this.maze.cellMatrix[this.y - 1][this.x]) &&
+                (this.y === this.maze.rows - 1 || this.maze.cellMatrix[this.y + 1][this.x])) ;
     }
 
     // move at random to an adjacent cell
@@ -102,5 +124,5 @@ class MazeCell {
 
 mz = new Maze();
 mz.makeDisplayGrid();
-
+mz.makeMaze();
 
