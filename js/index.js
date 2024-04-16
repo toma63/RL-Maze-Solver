@@ -16,9 +16,10 @@ class Maze {
         // 0 for empty, MazeCell if occupied
         this.cellMatrix = Array.from({ length: this.rows }, 
             () => Array(this.cols).fill(0));
+        this.initDisplay();
     }
 
-    makeDisplayGrid(gridSize = 100) {
+    initDisplay(gridSize = 100) {
         this.canvas = document.getElementById('maze-canvas');
         this.canvas.width = this.cols * gridSize;
         this.canvas.height = this.rows * gridSize;
@@ -29,7 +30,11 @@ class Maze {
         heading.style.width = window.getComputedStyle(this.canvas).width;
 
         this.ctx = this.canvas.getContext('2d');
+    }
 
+    makeDisplayGrid(gridSize = 100) {
+
+        this.ctx.beginPath();
         for (let x = 0; x <= this.canvas.width; x += gridSize) {
             this.ctx.moveTo(x, 0);
             this.ctx.lineTo(x, this.canvas.height);
@@ -51,9 +56,17 @@ class Maze {
 
     // make a maze, drawing lines between centers of cells
     makeMaze(start = new MazeCell(0, 0, this)) {
-        if (this.mazeCreated) {
-            return false;
-        }
+        // reinitialize
+        this.cellMatrix = Array.from({ length: this.rows }, 
+            () => Array(this.cols).fill(0));
+        let newCanvas = document.createElement('canvas');
+        let canvasParent = this.canvas.parentNode;
+        canvasParent.replaceChild(newCanvas, this.canvas);
+        this.canvas = newCanvas;
+        this.canvas.setAttribute('id', 'maze-canvas');
+        this.initDisplay();
+        this.makeDisplayGrid();
+
         this.ctx.beginPath();
         this.ctx.strokeStyle = "#00d";
         let currentCell = start;
@@ -63,12 +76,9 @@ class Maze {
             currentCell = currentCell.randomStep();
             if (currentCell) {
                 this.ctx.lineTo(...currentCell.displayCenterLoc());
-                console.log(currentCell);
             }
         } while (currentCell); // returns false when enclosed
         this.ctx.stroke();
-        this.mazeCreated = true;
-        return true;
     }
 
 }
@@ -87,7 +97,6 @@ class MazeCell {
     displayCenterLoc() {
         let centerDelta = this.maze.gridSize / 2;
         let result = [this.x * this.maze.gridSize + centerDelta, this.y * this.maze.gridSize + centerDelta];
-        console.log(result);
         return result;
     }
 
@@ -123,6 +132,5 @@ class MazeCell {
 
 
 mz = new Maze();
-mz.makeDisplayGrid();
 mz.makeMaze();
 
