@@ -41,6 +41,8 @@ class Maze {
     makeDisplayGrid(gridSize = 100) {
 
         this.ctx.beginPath();
+        this.ctx.strokeStyle = "#000";  // Grid default line color
+        this.ctx.lineWidth = 3;
         for (let x = 0; x <= this.canvas.width; x += gridSize) {
             this.ctx.moveTo(x, 0);
             this.ctx.lineTo(x, this.canvas.height);
@@ -50,9 +52,8 @@ class Maze {
             this.ctx.moveTo(0, y);
             this.ctx.lineTo(this.canvas.width, y);
         }
-
-        this.ctx.strokeStyle = "#ddd";  // Grid default line color
         this.ctx.stroke();
+        this.ctx.closePath();
     }
 
     placeCell(mazeCell) {
@@ -68,18 +69,17 @@ class Maze {
         this.initDisplay();
         this.makeDisplayGrid();
 
-        this.ctx.beginPath();
-        this.ctx.strokeStyle = "#00d";
         let currentCell = start;
-        this.ctx.moveTo(...currentCell.displayCenterLoc());
+        let prevCell = start;
         do {
             this.placeCell(currentCell);
+            prevCell = currentCell;
             currentCell = currentCell.randomStep();
             if (currentCell) {
-                this.ctx.lineTo(...currentCell.displayCenterLoc());
+                currentCell.markCrossing(prevCell);
             }
         } while (currentCell); // returns false when enclosed
-        this.ctx.stroke();
+
     }
 
 }
@@ -99,6 +99,42 @@ class MazeCell {
         let centerDelta = this.maze.gridSize / 2;
         let result = [this.x * this.maze.gridSize + centerDelta, this.y * this.maze.gridSize + centerDelta];
         return result;
+    }
+
+    // change the color od grid segments crossed
+    markCrossing(fromCell, gridColor = "#fff", pathColor = "#00d") {
+ 
+        // mark the path
+        this.maze.ctx.beginPath();
+        this.maze.ctx.strokeStyle = pathColor;
+        this.maze.ctx.moveTo(...fromCell.displayCenterLoc());
+        this.maze.ctx.lineTo(...this.displayCenterLoc());
+        this.maze.ctx.stroke();
+        this.maze.ctx.closePath();
+
+        // mark the grid crossing
+        this.maze.ctx.beginPath();
+        this.maze.ctx.strokeStyle = gridColor;
+
+
+        if (this.x < fromCell.x) {
+            this.maze.ctx.moveTo(fromCell.x * this.maze.gridSize, fromCell.y * this.maze.gridSize);
+            this.maze.ctx.lineTo(fromCell.x * this.maze.gridSize, (fromCell.y + 1) * this.maze.gridSize);
+        }
+        else if (this.x > fromCell.x) {
+            this.maze.ctx.moveTo(this.x * this.maze.gridSize, this.y * this.maze.gridSize);
+            this.maze.ctx.lineTo(this.x * this.maze.gridSize, (this.y + 1) * this.maze.gridSize);
+        }
+        else if (this.y < fromCell.y) {
+            this.maze.ctx.moveTo(fromCell.x * this.maze.gridSize, fromCell.y * this.maze.gridSize);
+            this.maze.ctx.lineTo((fromCell.x + 1) * this.maze.gridSize, fromCell.y * this.maze.gridSize);
+        }
+        else if (this.y > fromCell.y) {
+            this.maze.ctx.moveTo(this.x * this.maze.gridSize, this.y * this.maze.gridSize);
+            this.maze.ctx.lineTo((this.x + 1) * this.maze.gridSize, this.y * this.maze.gridSize);
+        }
+        this.maze.ctx.stroke();
+        this.maze.ctx.closePath();
     }
 
     step(move) {
