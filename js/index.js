@@ -42,7 +42,7 @@ class Maze {
 
         this.ctx.beginPath();
         this.ctx.strokeStyle = "#000";  // Grid default line color
-        this.ctx.lineWidth = 3;
+        this.ctx.lineWidth = 10;
         for (let x = 0; x <= this.canvas.width; x += gridSize) {
             this.ctx.moveTo(x, 0);
             this.ctx.lineTo(x, this.canvas.height);
@@ -79,7 +79,22 @@ class Maze {
                 currentCell.markCrossing(prevCell);
             }
         } while (currentCell); // returns false when enclosed
+        this.fillRects();
+    }
 
+    // fill in uncrossed cells
+    fillRects() {
+        this.ctx.fillStyle = "black;"
+        for (let i = 0 ; i < this.cols ; i++) {
+            for (let j = 0 ; j < this.rows ; j++) {
+                if (! this.cellMatrix[j][i]) {
+                    this.ctx.fillRect(i * this.gridSize, 
+                                      j * this.gridSize, 
+                                      this.gridSize,
+                                      this.gridSize);
+                }
+            }
+        }
     }
 
 }
@@ -104,37 +119,39 @@ class MazeCell {
     // change the color od grid segments crossed
     markCrossing(fromCell, gridColor = "#fff", pathColor = "#00d") {
  
+        // mark the grid crossing
+        this.maze.ctx.beginPath();
+        this.maze.ctx.strokeStyle = gridColor;
+        this.maze.ctx.lineWidth = 10;
+
+        if (this.x < fromCell.x) {
+            this.maze.ctx.moveTo(fromCell.x * this.maze.gridSize, fromCell.y * this.maze.gridSize + 5);
+            this.maze.ctx.lineTo(fromCell.x * this.maze.gridSize, (fromCell.y + 1) * this.maze.gridSize - 5);
+        }
+        else if (this.x > fromCell.x) {
+            this.maze.ctx.moveTo(this.x * this.maze.gridSize, this.y * this.maze.gridSize + 5);
+            this.maze.ctx.lineTo(this.x * this.maze.gridSize, (this.y + 1) * this.maze.gridSize - 5);
+        }
+        else if (this.y < fromCell.y) {
+            this.maze.ctx.moveTo(fromCell.x * this.maze.gridSize + 5, fromCell.y * this.maze.gridSize);
+            this.maze.ctx.lineTo((fromCell.x + 1) * this.maze.gridSize - 5, fromCell.y * this.maze.gridSize);
+        }
+        else if (this.y > fromCell.y) {
+            this.maze.ctx.moveTo(this.x * this.maze.gridSize + 5, this.y * this.maze.gridSize);
+            this.maze.ctx.lineTo((this.x + 1) * this.maze.gridSize - 5, this.y * this.maze.gridSize);
+        }
+        this.maze.ctx.stroke();
+        this.maze.ctx.closePath();
+
         // mark the path
         this.maze.ctx.beginPath();
         this.maze.ctx.strokeStyle = pathColor;
+        this.maze.ctx.lineWidth = 5;
         this.maze.ctx.moveTo(...fromCell.displayCenterLoc());
         this.maze.ctx.lineTo(...this.displayCenterLoc());
         this.maze.ctx.stroke();
         this.maze.ctx.closePath();
 
-        // mark the grid crossing
-        this.maze.ctx.beginPath();
-        this.maze.ctx.strokeStyle = gridColor;
-
-
-        if (this.x < fromCell.x) {
-            this.maze.ctx.moveTo(fromCell.x * this.maze.gridSize, fromCell.y * this.maze.gridSize);
-            this.maze.ctx.lineTo(fromCell.x * this.maze.gridSize, (fromCell.y + 1) * this.maze.gridSize);
-        }
-        else if (this.x > fromCell.x) {
-            this.maze.ctx.moveTo(this.x * this.maze.gridSize, this.y * this.maze.gridSize);
-            this.maze.ctx.lineTo(this.x * this.maze.gridSize, (this.y + 1) * this.maze.gridSize);
-        }
-        else if (this.y < fromCell.y) {
-            this.maze.ctx.moveTo(fromCell.x * this.maze.gridSize, fromCell.y * this.maze.gridSize);
-            this.maze.ctx.lineTo((fromCell.x + 1) * this.maze.gridSize, fromCell.y * this.maze.gridSize);
-        }
-        else if (this.y > fromCell.y) {
-            this.maze.ctx.moveTo(this.x * this.maze.gridSize, this.y * this.maze.gridSize);
-            this.maze.ctx.lineTo((this.x + 1) * this.maze.gridSize, this.y * this.maze.gridSize);
-        }
-        this.maze.ctx.stroke();
-        this.maze.ctx.closePath();
     }
 
     step(move) {
