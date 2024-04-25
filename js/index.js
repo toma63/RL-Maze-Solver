@@ -61,14 +61,8 @@ class Maze {
         return mazeCell;
     }
 
-    // make a maze, drawing lines between centers of cells
-    makeMaze(start = new MazeCell(0, 0, this)) {
-        // reinitialize
-        this.cellMatrix = Array.from({ length: this.rows }, 
-            () => Array(this.cols).fill(0));
-        this.initDisplay();
-        this.makeDisplayGrid();
-
+    // make one maze path from a starting point
+    makeMazePath(start) {
         let currentCell = start;
         let prevCell = start;
         do {
@@ -79,6 +73,26 @@ class Maze {
                 currentCell.markCrossing(prevCell);
             }
         } while (currentCell); // returns false when enclosed
+    }
+
+    // get a new unenclosed starting point on the existing path
+    getNewStart() {
+        //let flattened = this.cellMatrix.flat(); 
+        return this.cellMatrix.flat().find((c) => (c !== 0) && !c.enclosed());
+    }
+
+    // make a maze, drawing lines between centers of cells
+    makeMaze(start = new MazeCell(0, 0, this)) {
+        // reinitialize
+        this.cellMatrix = Array.from({ length: this.rows }, 
+            () => Array(this.cols).fill(0));
+        this.initDisplay();
+        this.makeDisplayGrid();
+        
+        for (this.makeMazePath(start) ; start ; start = this.getNewStart()) {
+            this.makeMazePath(start);
+        }
+
         this.fillRects();
     }
 
