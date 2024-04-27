@@ -82,12 +82,12 @@ class Maze {
     }
 
     // make a maze, drawing lines between centers of cells
-    makeMaze(start = new MazeCell(0, 0, this)) {
+    makeMaze(gridSize=100, start = new MazeCell(0, 0, this)) {
         // reinitialize
         this.cellMatrix = Array.from({ length: this.rows }, 
             () => Array(this.cols).fill(0));
-        this.initDisplay();
-        this.makeDisplayGrid();
+        this.initDisplay(gridSize);
+        this.makeDisplayGrid(gridSize);
         
         for (this.makeMazePath(start) ; start ; start = this.getNewStart()) {
             this.makeMazePath(start);
@@ -199,6 +199,6 @@ class MazeCell {
 }
 
 
-mz = new Maze();
-mz.makeMaze();
+mz = new Maze(30, 30);
+mz.makeMaze(30);
 
