@@ -119,6 +119,7 @@ class MazeCell {
         this.x = x;
         this.y = y;
         this.maze = maze;
+        this.legal = {n: false, s: false, e: false, w: false};
     }
 
     static moves = [{ x: 0, y: 1 }, { x: 1, y: 0 }, { x: 0, y: -1 }, { x: -1, y: 0 }];
@@ -130,7 +131,8 @@ class MazeCell {
         return result;
     }
 
-    // change the color od grid segments crossed
+    // change the color of grid segments crossed
+    // update legal moves
     markCrossing(fromCell, gridColor = "#fff", pathColor = "#00d") {
  
         // mark the grid crossing
@@ -141,18 +143,26 @@ class MazeCell {
         if (this.x < fromCell.x) {
             this.maze.ctx.moveTo(fromCell.x * this.maze.gridSize, fromCell.y * this.maze.gridSize + 5);
             this.maze.ctx.lineTo(fromCell.x * this.maze.gridSize, (fromCell.y + 1) * this.maze.gridSize - 5);
+            fromCell.legal.w = true;
+            this.legal.e = true;
         }
         else if (this.x > fromCell.x) {
             this.maze.ctx.moveTo(this.x * this.maze.gridSize, this.y * this.maze.gridSize + 5);
             this.maze.ctx.lineTo(this.x * this.maze.gridSize, (this.y + 1) * this.maze.gridSize - 5);
+            fromCell.legal.e = true;
+            this.legal.w = true;
         }
         else if (this.y < fromCell.y) {
             this.maze.ctx.moveTo(fromCell.x * this.maze.gridSize + 5, fromCell.y * this.maze.gridSize);
             this.maze.ctx.lineTo((fromCell.x + 1) * this.maze.gridSize - 5, fromCell.y * this.maze.gridSize);
+            fromCell.legal.n = true;
+            this.legal.s = true;
         }
         else if (this.y > fromCell.y) {
             this.maze.ctx.moveTo(this.x * this.maze.gridSize + 5, this.y * this.maze.gridSize);
             this.maze.ctx.lineTo((this.x + 1) * this.maze.gridSize - 5, this.y * this.maze.gridSize);
+            fromCell.legal.s = true;
+            this.legal.n = true;
         }
         this.maze.ctx.stroke();
         this.maze.ctx.closePath();
