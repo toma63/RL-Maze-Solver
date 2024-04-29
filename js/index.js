@@ -93,7 +93,12 @@ class Maze {
             this.makeMazePath(start);
         }
 
-        this.fillRects();
+        // for now goal is always the LR corner
+        let goalCell = this.cellMatrix[this.cols - 1][this.rows - 1];
+        goalCell.goal = true;
+        goalCell.markGoal();
+
+        this.fillRects();  // currently don't expect unfilled cells
     }
 
     // fill in uncrossed cells
@@ -120,6 +125,8 @@ class MazeCell {
         this.y = y;
         this.maze = maze;
         this.legal = {n: false, s: false, e: false, w: false};
+        this.q = {n: 0, s:0, e:0, w:0};
+        this.goal = false; // goal cell
     }
 
     static moves = [{ x: 0, y: 1 }, { x: 1, y: 0 }, { x: 0, y: -1 }, { x: -1, y: 0 }];
@@ -129,6 +136,15 @@ class MazeCell {
         let centerDelta = this.maze.gridSize / 2;
         let result = [this.x * this.maze.gridSize + centerDelta, this.y * this.maze.gridSize + centerDelta];
         return result;
+    }
+
+    // mark the goal cell in green
+    markGoal(goalColor = '#0f0') { 
+        this.maze.ctx.fillStyle = goalColor;
+        this.maze.ctx.fillRect(this.x * this.maze.gridSize + 5, 
+                               this.y * this.maze.gridSize + 5, 
+                               this.maze.gridSize - 10,
+                               this.maze.gridSize - 10);
     }
 
     // change the color of grid segments crossed
