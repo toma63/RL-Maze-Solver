@@ -110,13 +110,17 @@ class Maze {
     // run training by starting multiple passes at random places
     // for each pass:
     //   update q values until the goal is reached
-    RLTrain(passes = 10, start = this.getRandomCell()) {
+    RLTrain(passes = 10) {
         for (let pass = 0 ; pass < passes ; pass++) {
-            console.log("pass: ", pass);
-            let cell = start;
+            console.log("training pass: ", pass);
+            let cell = this.getRandomCell();
+            console.log("starting from : ", cell);
+            let steps = 0;
             do {
                 cell = cell.updateState();
+                steps++;
             } while (!cell.goal);
+            console.log("goal reached after ", steps, " steps");
         }
     }
 
@@ -184,7 +188,7 @@ class MazeCell {
             // sort on q values in descending order and pick first
             let moveName = qArr.sort((a, b) => b[1] - a[1])[0][0];
             let bestMove = MazeCell.moves.find(x => x.name === moveName);
-            console.log("bestMove: ", bestMove);
+            //console.log("bestMove: ", bestMove);
             return bestMove;
         }
     }
@@ -199,12 +203,12 @@ class MazeCell {
         if (Math.random() < this.hp.epsilon) {
             // explore
             move = this.getRandomMove();
-            console.log("exploring: ", move);
+            //console.log("exploring: ", move);
         }
         else {
             //exploit
             move = this.bestMove();
-            console.log("exploiting: ", move);
+            //console.log("exploiting: ", move);
         }
         // update epsilon
         this.hp.epsilon *= this.hp.epsilon_decay;
@@ -222,17 +226,17 @@ class MazeCell {
         else {
                 reward = this.hp.rIllegal;
         }
-        console.log("reward: ", reward);
+        //console.log("reward: ", reward);
         
         // update q
         let currentQ = this.q[move.name];
-        console.log("currentQ: ", currentQ);
+        //console.log("currentQ: ", currentQ);
         let newStateQ = newState.q[newState.bestMove().name];
-        console.log("newStateQ: ", newStateQ);
+        //console.log("newStateQ: ", newStateQ);
         let newQ = currentQ + this.hp.alpha * (reward + (this.hp.gamma * newStateQ) - currentQ);
-        console.log("newQ: ", newQ);
+        //console.log("newQ: ", newQ);
         this.q[move.name] = newQ;
-        console.log("newState: ", newState);
+        //console.log("newState: ", newState);
 
         return newState;
     }
@@ -306,7 +310,7 @@ class MazeCell {
     }
 
     nextState(move) {
-        console.log("nextState move: ", move);
+        //console.log("nextState move: ", move);
         return this.maze.cellMatrix[this.y + move.y][this.x + move.x];
     }
 
