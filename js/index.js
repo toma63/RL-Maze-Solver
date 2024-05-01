@@ -149,14 +149,24 @@ class MazeCell {
 
     static moves = [{ name: 's', x: 0, y: 1 }, 
                     { name: 'e', x: 1, y: 0 }, 
-                    { name: 'n',  x: 0, y: -1 }, 
+                    { name: 'n', x: 0, y: -1 }, 
                     { name: 'w', x: -1, y: 0 }];
 
     // select the best  move based on the highest q value
     bestMove() {
-        let moveArr = Object.entries(this.q); // pair [name, q]
-        // sort on q values in descending order and pick first
-        return moveArr.sort((a, b) => b[1] - a[1])[0];
+        let qArr = Object.entries(this.q); // array of pairs [name, q]
+        // if all are zero, random
+        if (qArr.every(val => val[1] === 0)) {
+            return this.getRandomMove();
+        }
+        else {
+
+            // sort on q values in descending order and pick first
+            let moveName = qArr.sort((a, b) => b[1] - a[1])[0][0];
+            let bestMove = MazeCell.moves.find(x => x.name === moveName);
+            console.log("bestMove: ", bestMove);
+            return bestMove;
+        }
     }
 
     // update the state based on the Bellman equation
@@ -169,10 +179,12 @@ class MazeCell {
         if (Math.random() < this.hp.epsilon) {
             // explore
             move = this.getRandomMove();
+            console.log("exploring: ", move);
         }
         else {
             //exploit
             move = this.bestMove();
+            console.log("exploiting: ", move);
         }
         // update epsilon
         this.hp.epsilon *= this.hp.epsilon_decay;
@@ -190,12 +202,17 @@ class MazeCell {
         else {
                 reward = this.hp.rIllegal;
         }
+        console.log("reward: ", reward);
         
         // update q
         let currentQ = this.q[move.name];
+        console.log("currentQ: ", currentQ);
         let newStateQ = newState.q[newState.bestMove().name];
+        console.log("newStateQ: ", newStateQ);
         let newQ = currentQ + this.hp.alpha * (reward + (this.hp.gamma * newStateQ) - currentQ);
+        console.log("newQ: ", newQ);
         this.q[move.name] = newQ;
+        console.log("newState: ", newState);
 
         return newState;
     }
@@ -269,6 +286,7 @@ class MazeCell {
     }
 
     nextState(move) {
+        console.log("nextState move: ", move);
         return this.maze.cellMatrix[this.y + move.y][this.x + move.x];
     }
 
