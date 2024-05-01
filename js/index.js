@@ -117,18 +117,88 @@ class Maze {
 
 }
 
+class RLHyperP {
+    constructor(epsilon = 0.3, 
+                epsilon_decay = 0.99, 
+                alpha = 0.5, 
+                gamma = 0.9, 
+                rIllegal = -0.75, 
+                rLegal = -0.1, 
+                rGoal = 10) {
+        this.epsilon = epsilon;
+        this.epsilon_decay = epsilon_decay;
+        this.alpha = alpha;
+        this.gamma = gamma;
+        this.rIllegal = rIllegal;
+        this.rLegal = rLegal;
+        this.rGoal = rGoal;
+    }
+}
+
 class MazeCell {
 
-    constructor(x, y, maze) {
+    constructor(x, y, maze, hp = new RLHyperP()) {
         this.x = x;
         this.y = y;
         this.maze = maze;
         this.legal = {n: false, s: false, e: false, w: false};
         this.q = {n: 0, s:0, e:0, w:0};
         this.goal = false; // goal cell
+        this.hp = hp;
     }
 
-    static moves = [{ x: 0, y: 1 }, { x: 1, y: 0 }, { x: 0, y: -1 }, { x: -1, y: 0 }];
+    static moves = [{ name: 's', x: 0, y: 1 }, 
+                    { name: 'e', x: 1, y: 0 }, 
+                    { name: 'n',  x: 0, y: -1 }, 
+                    { name: 'w', x: -1, y: 0 }];
+
+    // select the best  move based on the highest q value
+    bestMove() {
+        let moveArr = Object.entries(this.q); // pair [name, q]
+        // sort on q values in descending order and pick first
+        return moveArr.sort((a, b) => b[1] - a[1])[0];
+    }
+
+    // update the state based on the Bellman equation
+    // return the new cell
+    updateState() {
+        // select move based on epsilon greedy
+        let move = null; // a move object as in the static moves 
+        let reward = 0;
+        let newState = this; // no move by default, stay if illegal move generated
+        if (Math.random() < this.hp.epsilon) {
+            // explore
+            move = this.getRandomMove();
+        }
+        else {
+            //exploit
+            move = this.bestMove();
+        }
+        // update epsilon
+        this.hp.epsilon *= this.hp.epsilon_decay;
+
+        // compute reward
+        if (this.legal[move.name]) {
+            newState = this.nextState(move);
+            if (newState.goal) {
+                reward = this.hp.rGoal;
+            } 
+            else {
+                reward = this.hp.rLegal;
+            }
+        } 
+        else {
+                reward = this.hp.rIllegal;
+        }
+        
+        // update q
+        let currentQ = this.q[move.name];
+        let newStateQ = newState.q[newState.bestMove().name];
+        let newQ = currentQ + this.hp.alpha * (reward + (this.hp.gamma * newStateQ) - currentQ);
+        this.q[move.name] = newQ;
+
+        return newState;
+    }
 
     // display coordinates for the center of the cell
     displayCenterLoc() {
@@ -198,11 +268,20 @@ class MazeCell {
         return new MazeCell(this.x + move.x, this.y + move.y, this.maze);
     }
 
+    nextState(move) {
+        return this.maze.cellMatrix[this.y + move.y][this.x + move.x];
+    }
+
     enclosed() {
         return ((this.x === 0 || this.maze.cellMatrix[this.y][this.x - 1]) &&
                 (this.x === this.maze.cols - 1 || this.maze.cellMatrix[this.y][this.x + 1]) &&
                 (this.y === 0 || this.maze.cellMatrix[this.y - 1][this.x]) &&
                 (this.y === this.maze.rows - 1 || this.maze.cellMatrix[this.y + 1][this.x])) ;
+    }
+
+    // select a random move
+    getRandomMove() {
+        return shuffle(MazeCell.moves)[0];
     }
 
     // move at random to an adjacent cell
@@ -213,7 +292,7 @@ class MazeCell {
         }
         let newCell = new MazeCell(0, 0, this.maze)
         do {
-            newCell = this.step(shuffle(MazeCell.moves)[0]);
+            newCell = this.step(this.getRandomMove());
         // keep going while illegal
         } while (newCell.x < 0 ||
                  newCell.y < 0 || 
