@@ -1,0 +1,11 @@
+#maze-canvas {
+    border: 5px;
+    border-style:solid;
+    border-color: black;
+    margin: 50px;
+}
+
+#main-heading {
+    text-align: center;
+    margin-left: 50px;
+}
