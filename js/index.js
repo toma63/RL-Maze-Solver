@@ -100,6 +100,26 @@ class Maze {
         this.fillRects();  // currently don't expect unfilled cells
     }
 
+    // get a random cell
+    getRandomCell() {
+        let rY = Math.floor(this.rows * Math.random());
+        let rX = Math.floor(this.cols * Math.random());
+        return this.cellMatrix[rY][rX];
+    }
+
+    // run training by starting multiple passes at random places
+    // for each pass:
+    //   update q values until the goal is reached
+    RLTrain(passes = 10, start = this.getRandomCell()) {
+        for (let pass = 0 ; pass < passes ; pass++) {
+            console.log("pass: ", pass);
+            let cell = start;
+            do {
+                cell = cell.updateState();
+            } while (!cell.goal);
+        }
+    }
+
     // fill in uncrossed cells
     fillRects() {
         this.ctx.fillStyle = "black;"
