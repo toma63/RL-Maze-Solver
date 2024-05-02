@@ -5,7 +5,7 @@ Try it here: https://toma63.github.io/RL-Maze-Solver
 
 Here's a screenshot:
 
-!screenshot.png
+![screenshot of a maze solution](./mazeScreenshot.png)
 
 
 
