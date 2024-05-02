@@ -112,16 +112,33 @@ class Maze {
     //   update q values until the goal is reached
     RLTrain(passes = 10) {
         for (let pass = 0 ; pass < passes ; pass++) {
-            console.log("training pass: ", pass);
+            //console.log("training pass: ", pass);
             let cell = this.getRandomCell();
-            console.log("starting from : ", cell);
+            //console.log("starting from : ", cell);
             let steps = 0;
             do {
                 cell = cell.updateState();
                 steps++;
             } while (!cell.goal);
-            console.log("goal reached after ", steps, " steps");
+            //console.log("goal reached after ", steps, " steps");
+            //console.log("cell: ", cell, "epsilon: ", cell.hp.epsilon);
         }
+    }
+
+    // solve the maze from the given x and y
+    // use the best q value to select moves
+    // mark the path in red.
+    // time out after maxSteps
+    solveFrom(x = 0, y = 0, maxSteps = 1000, color = '#f00') {
+        let steps = 0;
+        let cell = this.cellMatrix[y][x];
+        while (!cell.goal && (steps < maxSteps)) {
+            steps++
+            let newCell = cell.nextState(cell.bestMove());
+            newCell.markPath(cell, color);
+            cell = newCell;
+        }
+        console.log(`finished after: ${steps} steps`);
     }
 
     // fill in uncrossed cells
@@ -184,7 +201,6 @@ class MazeCell {
             return this.getRandomMove();
         }
         else {
-
             // sort on q values in descending order and pick first
             let moveName = qArr.sort((a, b) => b[1] - a[1])[0][0];
             let bestMove = MazeCell.moves.find(x => x.name === moveName);
@@ -295,6 +311,11 @@ class MazeCell {
         this.maze.ctx.closePath();
 
         // mark the path
+        this.markPath(fromCell, pathColor);
+
+    }
+
+    markPath(fromCell, pathColor = '#f00') {
         this.maze.ctx.beginPath();
         this.maze.ctx.strokeStyle = pathColor;
         this.maze.ctx.lineWidth = 5;
@@ -302,7 +323,6 @@ class MazeCell {
         this.maze.ctx.lineTo(...this.displayCenterLoc());
         this.maze.ctx.stroke();
         this.maze.ctx.closePath();
-
     }
 
     step(move) {
@@ -348,4 +368,6 @@ class MazeCell {
 
 mz = new Maze(30, 30);
 mz.makeMaze(30);
+mz.RLTrain(10000);
+mz.solveFrom();
 
