@@ -22,7 +22,16 @@ class Maze {
         //console.log(`rows ${this.rows} cols ${this.cols} 22: ${this.cellMatrix[2][2]}`);
     }
 
-    initDisplay(gridSize = 100) {
+    initDisplay(gridSize = 100, gridColor = "#000", 
+                                pathColor = "#00d", 
+                                solveColor = "#f00", 
+                                goalColor = "#0f0",
+                                bgColor = "#fff") {
+        this.gridColor = gridColor;
+        this.pathColor = pathColor;
+        this.solveColor = solveColor;
+        this.goalColor = goalColor;
+        this.bgColor = bgColor;
         let canvasContainer = document.getElementById('canvas-container');
         let oldCanvas = document.getElementById('maze-canvas');
         let newCanvas = document.createElement('canvas');
@@ -44,7 +53,7 @@ class Maze {
     makeDisplayGrid(gridSize = 100) {
 
         this.ctx.beginPath();
-        this.ctx.strokeStyle = "#000";  // Grid default line color
+        this.ctx.strokeStyle = this.gridColor;  // Grid default line color
         this.ctx.lineWidth = 10;
         for (let x = 0.0 ; x <= this.canvas.width ; x += gridSize) {
             //console.log("gridSize: ", gridSize, "x: ", x, "width: ", this.canvas.width);
@@ -132,16 +141,34 @@ class Maze {
     // use the best q value to select moves
     // mark the path in red.
     // time out after maxSteps
-    solveFrom(x = 0, y = 0, maxSteps = 1000, color = '#f00') {
+    solveFrom(x = 0, y = 0, maxSteps = 1000, color = this.solveColor) {
+        this.clearSolve();
         let steps = 0;
         let cell = this.cellMatrix[y][x];
+        this.solvePath.push(cell);
         while (!cell.goal && (steps < maxSteps)) {
             steps++
             let newCell = cell.nextState(cell.bestMove());
             newCell.markPath(cell, color);
             cell = newCell;
+            this.solvePath.push(cell);
         }
         console.log(`finished after: ${steps} steps`);
+    }
+
+    // clear a solution path from the display
+    clearSolve(pathColor = this.pathColor) {
+        if (!this.solvePath) {
+            this.solvePath = [];
+            return;
+        }
+        let cell = this.solvePath[0];
+        for (let i = 1 ; i < this.solvePath.length ; i++) {
+            let nextCell = this.solvePath[i];
+            nextCell.markPath(cell, pathColor);
+            cell = nextCell;
+        }
+        this.solvePath = [];
     }
 
     // fill in uncrossed cells
@@ -268,7 +295,7 @@ class MazeCell {
     }
 
     // mark the goal cell in green
-    markGoal(goalColor = '#0f0') { 
+    markGoal(goalColor = this.maze.goalColor) { 
         this.goal = true;
         this.maze.ctx.fillStyle = goalColor;
         this.maze.ctx.fillRect(this.x * this.maze.gridSize + 5, 
@@ -279,11 +306,11 @@ class MazeCell {
 
     // change the color of grid segments crossed
     // update legal moves
-    markCrossing(fromCell, gridColor = "#fff", pathColor = "#00d") {
+    markCrossing(fromCell, bgColor = this.maze.bgColor, pathColor = this.maze.Pathcolor) {
  
         // mark the grid crossing
         this.maze.ctx.beginPath();
-        this.maze.ctx.strokeStyle = gridColor;
+        this.maze.ctx.strokeStyle = bgColor;
         this.maze.ctx.lineWidth = 10;
 
         if (this.x < fromCell.x) {
@@ -318,7 +345,7 @@ class MazeCell {
 
     }
 
-    markPath(fromCell, pathColor = '#f00') {
+    markPath(fromCell, pathColor = this.maze.pathColor) {
         this.maze.ctx.beginPath();
         this.maze.ctx.strokeStyle = pathColor;
         this.maze.ctx.lineWidth = 5;
