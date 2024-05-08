@@ -12,11 +12,14 @@ class Maze {
     constructor(rows = 10, cols = 10) {
         this.rows = rows;
         this.cols = cols;
-        // initialize occupancy matrix
-        // 0 for empty, MazeCell if occupied
-        this.cellMatrix = Array.from({ length: this.rows }, 
-            () => Array(this.cols).fill(0));
-        this.initDisplay();
+        this.initCellMatrix();
+    }
+
+    // initialize occupancy matrix
+    // 0 for empty, MazeCell if occupied
+    initCellMatrix() {
+        this.cellMatrix = Array.from({ length: this.rows }, () => Array.from({ length: this.cols }).fill(0));
+        //console.log(`rows ${this.rows} cols ${this.cols} 22: ${this.cellMatrix[2][2]}`);
     }
 
     initDisplay(gridSize = 100) {
@@ -43,7 +46,8 @@ class Maze {
         this.ctx.beginPath();
         this.ctx.strokeStyle = "#000";  // Grid default line color
         this.ctx.lineWidth = 10;
-        for (let x = 0; x <= this.canvas.width; x += gridSize) {
+        for (let x = 0.0 ; x <= this.canvas.width ; x += gridSize) {
+            //console.log("gridSize: ", gridSize, "x: ", x, "width: ", this.canvas.width);
             this.ctx.moveTo(x, 0);
             this.ctx.lineTo(x, this.canvas.height);
         }
@@ -84,8 +88,7 @@ class Maze {
     // make a maze, drawing lines between centers of cells
     makeMaze(gridSize=100, start = new MazeCell(0, 0, this)) {
         // reinitialize
-        this.cellMatrix = Array.from({ length: this.rows }, 
-            () => Array(this.cols).fill(0));
+        this.initCellMatrix();
         this.initDisplay(gridSize);
         this.makeDisplayGrid(gridSize);
         
@@ -365,9 +368,90 @@ class MazeCell {
     }
 }
 
+let settingsForm = document.querySelector("[name='settings']");
+let trainForm = document.querySelector("[name='train']");
+let solveForm = document.querySelector("[name='solve']");
+let maze;
 
-mz = new Maze(30, 30);
-mz.makeMaze(30);
-mz.RLTrain(10000);
-mz.solveFrom();
+// reset form with defaults
+function settingsFormDefaults(cols = 30, rows = 30, grid = 30) {
+    settingsForm.columns.value = cols; 
+    settingsForm.rows.value = rows; 
+    settingsForm.gridSize.value = grid; 
+}
+
+function trainFormDefault(passes = 10000) {
+    trainForm.passes.value = passes;
+}
+
+function solveFormDefaults(startx = 0, starty = 0, limit = 1000) {
+    solveForm.startx.value = startx; 
+    solveForm.starty.value = starty; 
+    solveForm.limit.value = limit; 
+}
+
+settingsFormDefaults();
+trainFormDefault();
+solveFormDefaults();
+
+settingsForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    let rows = Number(event.target.rows.value);
+    let columns = Number(event.target.columns.value);
+    let gridSize = Number(event.target.gridSize.value);
+
+    //console.log('Rows:', rows);
+    //console.log('Columns:', columns);
+    //console.log('Grid Size:', gridSize);
+
+    maze = new Maze(rows, columns);
+    maze.makeMaze(gridSize);
+
+    settingsForm.reset();
+    settingsFormDefaults(columns, rows, gridSize);
+});
+
+trainForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    let passes = Number(event.target.passes.value);
+    console.log("passes: ", passes);
+
+    if (!maze) {
+        console.error("Error: maze not defined");
+    }
+    else {
+        maze.RLTrain(passes); // make async?
+        console.log("training done!");
+    }
+
+    trainForm.reset();
+    trainFormDefault(passes);
+});
+
+solveForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    let startx = Number(event.target.startx.value);
+    let starty = Number(event.target.starty.value);
+    let limit = Number(event.target.limit.value);
+
+    console.log('startx:', startx);
+    console.log('starty:', starty);
+    console.log('limit:', limit);
+
+    if (!maze) {
+        console.error("Error: maze not defined");
+    }
+    else {
+        maze.solveFrom(startx, starty, limit);
+        console.log("Done solving!");
+    }
+
+    solveForm.reset();
+    solveFormDefaults(startx, starty, limit);
+});
+
+//mz = new Maze(30, 30);
+//mz.makeMaze(30);
+//mz.RLTrain(10000);
+//mz.solveFrom();
 
