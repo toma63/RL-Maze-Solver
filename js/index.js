@@ -97,7 +97,7 @@ class Maze {
         }
 
         // for now goal is always the LR corner
-        let goalCell = this.cellMatrix[this.cols - 1][this.rows - 1];
+        let goalCell = this.cellMatrix[this.rows - 1][this.cols - 1];
         goalCell.markGoal();
 
         this.fillRects();  // currently don't expect unfilled cells
