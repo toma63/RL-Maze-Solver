@@ -428,19 +428,17 @@ function solveFormDefaults(startx = 0, starty = 0, limit = 1000) {
     solveForm.limit.value = limit; 
 }
 
-function disableButtons() {
+function hideButtons() {
     buttons = document.getElementsByClassName('submit-button');
     for (let element of buttons) {
-        element.disabled = true;
-        element.style.backgroundColor = 'black';
+        element.hidden = true;
     };
 }
 
-function enableButtons() {
+function showButtons() {
     buttons = document.getElementsByClassName('submit-button');
     for (let element of buttons) {
-        element.disabled = false;
-        element.style.backgroundColor = 'aqua';
+        element.hidden = false;
     };
 }
 
@@ -475,10 +473,10 @@ trainForm.addEventListener('submit', (event) => {
         console.error("Error: maze not defined");
     }
     else {
-        disableButtons();
+        hideButtons();
         maze.RLTrain(passes).then(() => {
             console.log("training complete")
-            enableButtons();
+            showButtons();
         }); // runs async
         console.log("training started");
     }
