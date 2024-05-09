@@ -97,8 +97,8 @@ class Maze {
 
     // get a new unenclosed starting point on the existing path
     getNewStart() {
-        //let flattened = this.cellMatrix.flat(); 
-        return this.cellMatrix.flat().find((c) => (c !== 0) && !c.enclosed());
+        let candidates = this.cellMatrix.flat().filter((c) => (c !== 0) && !c.enclosed());
+        return shuffle(candidates)[0];
     }
 
     // make a maze, drawing lines between centers of cells
