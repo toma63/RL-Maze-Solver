@@ -131,20 +131,18 @@ class Maze {
     //   update q values until the goal is reached
     RLTrain(passes = 10) {
         return new Promise((resolve) => {
-            let pass = 0;
             const runLoop = () => {
-                if (pass < passes) {
+                for (let pass = 0 ; pass < passes ; pass++) {
+                    //console.log("training pass: ", pass);
                     let cell = this.getRandomCell();
+                    //console.log("starting from : ", cell);
                     let steps = 0;
                     do {
                         cell = cell.updateState();
                         steps++;
                     } while (!cell.goal);
-                    pass++;
-                    runLoop();  
-                } else {
-                    resolve();
                 }
+                resolve();
             };
             setTimeout(runLoop, 0); // Introduce an asynchronous operation
         });
@@ -430,6 +428,22 @@ function solveFormDefaults(startx = 0, starty = 0, limit = 1000) {
     solveForm.limit.value = limit; 
 }
 
+function disableButtons() {
+    buttons = document.getElementsByClassName('submit-button');
+    for (let element of buttons) {
+        element.disabled = true;
+        element.style.backgroundColor = 'black';
+    };
+}
+
+function enableButtons() {
+    buttons = document.getElementsByClassName('submit-button');
+    for (let element of buttons) {
+        element.disabled = false;
+        element.style.backgroundColor = 'aqua';
+    };
+}
+
 settingsFormDefaults();
 trainFormDefault();
 solveFormDefaults();
@@ -453,6 +467,7 @@ settingsForm.addEventListener('submit', (event) => {
 
 trainForm.addEventListener('submit', (event) => {
     event.preventDefault();
+
     let passes = Number(event.target.passes.value);
     console.log("passes: ", passes);
 
@@ -460,7 +475,11 @@ trainForm.addEventListener('submit', (event) => {
         console.error("Error: maze not defined");
     }
     else {
-        maze.RLTrain(passes).then(() => {console.log("training complete")}); // runs async
+        disableButtons();
+        maze.RLTrain(passes).then(() => {
+            console.log("training complete")
+            enableButtons();
+        }); // runs async
         console.log("training started");
     }
 
