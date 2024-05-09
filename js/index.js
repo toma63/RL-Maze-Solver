@@ -35,8 +35,8 @@ class Maze {
         let canvasContainer = document.getElementById('canvas-container');
         let oldCanvas = document.getElementById('maze-canvas');
         let newCanvas = document.createElement('canvas');
-        
-        if (oldCanvas) {
+
+        if (oldCanvas !== null) {
             canvasContainer.replaceChild(newCanvas, oldCanvas);
         }
         else {
