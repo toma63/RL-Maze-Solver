@@ -130,18 +130,24 @@ class Maze {
     // for each pass:
     //   update q values until the goal is reached
     RLTrain(passes = 10) {
-        for (let pass = 0 ; pass < passes ; pass++) {
-            //console.log("training pass: ", pass);
-            let cell = this.getRandomCell();
-            //console.log("starting from : ", cell);
-            let steps = 0;
-            do {
-                cell = cell.updateState();
-                steps++;
-            } while (!cell.goal);
-            //console.log("goal reached after ", steps, " steps");
-            //console.log("cell: ", cell, "epsilon: ", cell.hp.epsilon);
-        }
+        return new Promise((resolve) => {
+            let pass = 0;
+            const runLoop = () => {
+                if (pass < passes) {
+                    let cell = this.getRandomCell();
+                    let steps = 0;
+                    do {
+                        cell = cell.updateState();
+                        steps++;
+                    } while (!cell.goal);
+                    pass++;
+                    runLoop();  
+                } else {
+                    resolve();
+                }
+            };
+            setTimeout(runLoop, 0); // Introduce an asynchronous operation
+        });
     }
 
     // solve the maze from the given x and y
@@ -454,8 +460,8 @@ trainForm.addEventListener('submit', (event) => {
         console.error("Error: maze not defined");
     }
     else {
-        maze.RLTrain(passes); // make async?
-        console.log("training done!");
+        maze.RLTrain(passes).then(() => {console.log("training complete")}); // runs async
+        console.log("training started");
     }
 
     trainForm.reset();
