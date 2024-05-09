@@ -9,3 +9,7 @@
     text-align: center;
     margin-left: 50px;
 }
+.submit-button {
+    background-color:aqua;
+    border-radius: 0.25em;
+}
