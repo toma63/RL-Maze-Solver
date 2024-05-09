@@ -35,7 +35,14 @@ class Maze {
         let canvasContainer = document.getElementById('canvas-container');
         let oldCanvas = document.getElementById('maze-canvas');
         let newCanvas = document.createElement('canvas');
-        canvasContainer.replaceChild(newCanvas, oldCanvas);
+        
+        if (oldCanvas) {
+            canvasContainer.replaceChild(newCanvas, oldCanvas);
+        }
+        else {
+            canvasContainer.appendChild(newCanvas); 
+        }
+        
         this.canvas = newCanvas;
         this.canvas.setAttribute('id', 'maze-canvas');
 
@@ -407,7 +414,7 @@ function settingsFormDefaults(cols = 30, rows = 30, grid = 30) {
     settingsForm.gridSize.value = grid; 
 }
 
-function trainFormDefault(passes = 10000) {
+function trainFormDefault(passes = 2000) {
     trainForm.passes.value = passes;
 }
 
