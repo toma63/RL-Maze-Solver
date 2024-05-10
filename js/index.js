@@ -159,12 +159,18 @@ class Maze {
         this.solvePath.push(cell);
         while (!cell.goal && (steps < maxSteps)) {
             steps++
-            let newCell = cell.nextState(cell.bestMove());
+            let newCell = cell.nextState(cell.bestMove(true));
             newCell.markPath(cell, color);
             cell = newCell;
             this.solvePath.push(cell);
         }
-        console.log(`finished after: ${steps} steps`);
+        if (steps === maxSteps) {
+            console.log(`Stopped because the step limit (${maxSteps}) was reached`);
+        }
+        else {
+            console.log(`finished after: ${steps} steps`);
+        }
+        return steps;
     }
 
     // clear a solution path from the display
@@ -235,11 +241,16 @@ class MazeCell {
                     { name: 'w', x: -1, y: 0 }];
 
     // select the best  move based on the highest q value
-    bestMove() {
+    bestMove(forceLegal = false) {
         let qArr = Object.entries(this.q); // array of pairs [name, q]
         // if all are zero, random
         if (qArr.every(val => val[1] === 0)) {
-            return this.getRandomMove();
+            if (forceLegal) {
+                return this.getRandomLegalMove();
+            }
+            else {
+                return this.getRandomMove();
+            }
         }
         else {
             // sort on q values in descending order and pick first
@@ -387,6 +398,11 @@ class MazeCell {
         return shuffle(MazeCell.moves)[0];
     }
 
+    // select a random move, but make sure it's legal
+    getRandomLegalMove() {
+        return shuffle(MazeCell.moves.filter((move) => this.legal[move.name]))[0];
+    }
+
     // move at random to an adjacent cell
     // return false if no moves are possible
     randomStep() {
@@ -409,6 +425,11 @@ class MazeCell {
 let settingsForm = document.querySelector("[name='settings']");
 let trainForm = document.querySelector("[name='train']");
 let solveForm = document.querySelector("[name='solve']");
+const solutionCompleteBanner = document.getElementById('solution-complete');
+solutionCompleteBanner.hidden = true;
+const solutionCompleteSteps = document.getElementById('solution-steps');
+const solutionTimeoutBanner = document.getElementById('solution-timeout');
+solutionTimeoutBanner.hidden = true;
 let maze;
 
 // reset form with defaults
@@ -448,6 +469,10 @@ solveFormDefaults();
 
 settingsForm.addEventListener('submit', (event) => {
     event.preventDefault();
+
+    solutionCompleteBanner.hidden = true;
+    solutionCompleteBanner.hidden = true;
+
     let rows = Number(event.target.rows.value);
     let columns = Number(event.target.columns.value);
     let gridSize = Number(event.target.gridSize.value);
@@ -485,6 +510,7 @@ trainForm.addEventListener('submit', (event) => {
     trainFormDefault(passes);
 });
 
+
 solveForm.addEventListener('submit', (event) => {
     event.preventDefault();
     let startx = Number(event.target.startx.value);
@@ -499,16 +525,21 @@ solveForm.addEventListener('submit', (event) => {
         console.error("Error: maze not defined");
     }
     else {
-        maze.solveFrom(startx, starty, limit);
+        solutionCompleteBanner.hidden = true;
+        solutionTimeoutBanner.hidden = true;
+        let steps = maze.solveFrom(startx, starty, limit);
         console.log("Done solving!");
+        if (steps === limit) {
+            solutionTimeoutBanner.hidden = false;
+        }
+        else {
+            solutionCompleteSteps.innerText = steps;
+            solutionCompleteBanner.hidden = false;
+        }
     }
 
     solveForm.reset();
     solveFormDefaults(startx, starty, limit);
 });
 
-//mz = new Maze(30, 30);
-//mz.makeMaze(30);
-//mz.RLTrain(10000);
-//mz.solveFrom();
 

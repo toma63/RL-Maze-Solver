@@ -34,7 +34,12 @@
             <label for="limit">Move limit:</label>
             <input type="number" id="limit" name="limit" required="true" />
             <button type="submit" value="solve" name="solve" class="submit-button">Solve</button>
-        </form>
+        </form><br>
+        <span id="solution-complete">
+            Solution complete, total steps: 
+            <span id="solution-steps"></span>
+        </span>
+        <span id="solution-timeout">Solution stopped after reaching the limit</span>
         </section>
         <div id="canvas-container">
         </div>
