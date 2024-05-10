@@ -6,10 +6,37 @@
 }
 
 #main-heading {
-    text-align: center;
+    text-align: left;
     margin-left: 50px;
 }
 .submit-button {
-    background-color:aqua;
+    background-color:rgb(184, 207, 245);
     border-radius: 0.25em;
+    margin-right: 10px;
+    margin-left: 10px;
+}
+.form {
+    display: flex;
+    flex-direction:row;
+}
+label {
+    display: inline;
+    padding-right: 10px;
+    padding-left: 10px;
+    width: 5em;
+}
+@media only screen and (max-width: 900px) {
+    .form {
+        flex-direction: column;
+    }
+    label {
+        display: inline-block;
+    }
+    .submit-button {
+        width: 10em;
+        margin-top: 1em;    
+    }
+    #main-heading {
+        text-align: left;
+    }
 }

@@ -10,19 +10,27 @@
     <h1 id="main-heading">Maze</h1>
     <section id="form-section">
         <h2>Settings</h2>
-        <form name="settings" class="settings-form">
-            <label for="rows">Rows:</label>
-            <input type="number" id="rows" name="rows" required="true" />
-            <label for="columns">Columns:</label>
-            <input type="number" id="columns" name="columns" required="true" />
-            <label for="gridSize">Grid Size:</label>
-            <input type="number" id="gridSize" name="gridSize" required="true" />
+        <form name="settings" class="form">
+            <div class="form-item">
+                <label for="rows">Rows:</label>
+                <input type="number" id="rows" name="rows" required="true" />
+            </div>
+            <div class="form-item">
+                <label for="columns">Columns:</label>
+                <input type="number" id="columns" name="columns" required="true" />
+            </div>
+            <div class="form-item">
+                <label for="gridSize">Grid Size:</label>
+                <input type="number" id="gridSize" name="gridSize" required="true" />
+            </div>
             <button type="submit" value="submit" name="submit" class="submit-button">Make Maze</button>
         </form><br>
         <h2>Training</h2>
-        <form name="train" class="train-form">
-            <label for="passes">Passes</label>
-            <input type="number" id="passes" name="passes" required="true" />
+        <form name="train" class="form">
+            <div class="form-item">
+                <label for="passes">Passes:</label>
+                <input type="number" id="passes" name="passes" required="true" />
+            </div>
             <button type="submit" value="train" name="train" class="submit-button">Run Training</button>
         </form><br>
         <span id="training-banner">
@@ -30,13 +38,19 @@
             <span id="training-passes"></span>
         </span>
          <h2>Solve</h2>
-        <form name="solve" class="solve-form">
-            <label for="startx">Starting x:</label>
-            <input type="number" id="startx" name="startx" required="true" />
-            <label for="starty">Starting y:</label>
-            <input type="number" id="starty" name="starty" required="true" />
-            <label for="limit">Move limit:</label>
-            <input type="number" id="limit" name="limit" required="true" />
+        <form name="solve" class="form">
+            <div class="form-item">
+                <label for="startx">Starting x:</label>
+                <input type="number" id="startx" name="startx" required="true" />
+            </div>
+            <div class="form-item">
+                <label for="starty">Starting y:</label>
+                <input type="number" id="starty" name="starty" required="true" />
+            </div>
+            <div class="form-item">
+                <label for="limit">Move limit:</label>
+                <input type="number" id="limit" name="limit" required="true" />
+            </div>
             <button type="submit" value="solve" name="solve" class="submit-button">Solve</button>
         </form><br>
         <span id="solution-complete">

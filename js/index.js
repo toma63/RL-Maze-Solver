@@ -437,7 +437,7 @@ let totalTrainingPasses = 0;
 let maze;
 
 // reset form with defaults
-function settingsFormDefaults(cols = 30, rows = 30, grid = 30) {
+function settingsFormDefaults(cols = 30, rows = 30, grid = 25) {
     settingsForm.columns.value = cols; 
     settingsForm.rows.value = rows; 
     settingsForm.gridSize.value = grid; 
