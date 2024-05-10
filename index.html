@@ -25,7 +25,11 @@
             <input type="number" id="passes" name="passes" required="true" />
             <button type="submit" value="train" name="train" class="submit-button">Run Training</button>
         </form><br>
-        <h2>Solve</h2>
+        <span id="training-banner">
+            Total training passes: 
+            <span id="training-passes"></span>
+        </span>
+         <h2>Solve</h2>
         <form name="solve" class="solve-form">
             <label for="startx">Starting x:</label>
             <input type="number" id="startx" name="startx" required="true" />

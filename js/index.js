@@ -430,6 +430,10 @@ solutionCompleteBanner.hidden = true;
 const solutionCompleteSteps = document.getElementById('solution-steps');
 const solutionTimeoutBanner = document.getElementById('solution-timeout');
 solutionTimeoutBanner.hidden = true;
+const trainingBanner = document.getElementById('training-banner');
+const trainingPasses = document.getElementById('training-passes');
+trainingBanner.hidden = true;
+let totalTrainingPasses = 0;
 let maze;
 
 // reset form with defaults
@@ -472,6 +476,8 @@ settingsForm.addEventListener('submit', (event) => {
 
     solutionCompleteBanner.hidden = true;
     solutionCompleteBanner.hidden = true;
+    trainingBanner.hidden = true;
+    totalTrainingPasses = 0;
 
     let rows = Number(event.target.rows.value);
     let columns = Number(event.target.columns.value);
@@ -502,6 +508,9 @@ trainForm.addEventListener('submit', (event) => {
         maze.RLTrain(passes).then(() => {
             console.log("training complete")
             showButtons();
+            totalTrainingPasses += passes;
+            trainingPasses.innerText = totalTrainingPasses;
+            trainingBanner.hidden = false;
         }); // runs async
         console.log("training started");
     }
