@@ -467,7 +467,12 @@ function showButtons() {
     };
 }
 
-settingsFormDefaults();
+if (window.innerWidth < 900) {
+    settingsFormDefaults(10, 10);
+}
+else {
+    settingsFormDefaults();
+}
 trainFormDefault();
 solveFormDefaults();
 
