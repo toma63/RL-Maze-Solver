@@ -467,6 +467,22 @@ function showButtons() {
     };
 }
 
+// Create a link to download the current state of the maze as JSON
+function makeDownloadMazeLink() {
+    // get relevant maze data for download
+    // legal moves, x, y, q, goal
+    const cellInfo = maze.cellMatrix.flat().map((cell) =>
+        { return {x: cell.x, y: cell.y, q: cell.q, legal: cell.legal, goal: cell.goal}; });
+    const blob = new Blob([JSON.stringify(cellInfo)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.innerText = "Download maze details";
+    a.download = 'maze.json';
+    a.setAttribute('id', 'download-link');
+    return a;
+}
+
 if (window.innerWidth < 900) {
     settingsFormDefaults(10, 10);
 }
@@ -540,7 +556,11 @@ solveForm.addEventListener('submit', (event) => {
     }
     else {
         solutionCompleteBanner.hidden = true;
+        downloadLink = document.getElementById('download-link');
         solutionTimeoutBanner.hidden = true;
+        if (downloadLink !== null) {
+            solutionCompleteBanner.removeChild(downloadLink);
+        }
         let steps = maze.solveFrom(startx, starty, limit);
         console.log("Done solving!");
         if (steps === limit) {
@@ -548,6 +568,7 @@ solveForm.addEventListener('submit', (event) => {
         }
         else {
             solutionCompleteSteps.innerText = steps;
+            solutionCompleteBanner.appendChild(makeDownloadMazeLink());
             solutionCompleteBanner.hidden = false;
         }
     }
