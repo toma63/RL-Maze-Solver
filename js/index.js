@@ -435,6 +435,7 @@ solutionTimeoutBanner.hidden = true;
 const trainingBanner = document.getElementById('training-banner');
 const trainingPasses = document.getElementById('training-passes');
 trainingBanner.hidden = true;
+const downloadContainer = document.getElementById('download-container');
 let totalTrainingPasses = 0;
 let maze;
 const rLHP = new RLHyperP(); // to be filled with form and included in download
@@ -470,6 +471,21 @@ function showButtons() {
     };
 }
 
+let oldUrl = null;
+function updateDownloadLink() {
+    downloadLink = document.getElementById('download-link');
+    if (downloadLink !== null) {
+        // Revoke the old object URL
+        if (oldUrl !== null) {
+            URL.revokeObjectURL(oldUrl);
+            oldUrl = null;
+            console.log("revoked old URL");
+        }
+        downloadContainer.removeChild(downloadLink);
+    }
+    downloadContainer.appendChild(makeDownloadMazeLink());
+}
+
 // Create a link to download the current state of the maze as JSON
 function makeDownloadMazeLink() {
     // get relevant maze data for download
@@ -477,8 +493,10 @@ function makeDownloadMazeLink() {
     const cellInfo = maze.cellMatrix.flat().map((cell) =>
         { return {x: cell.x, y: cell.y, q: cell.q, legal: cell.legal, goal: cell.goal}; });
     const config = { cell_info: cellInfo, rlhp: rLHP};
-    const blob = new Blob([JSON.stringify(config)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+    let blob = new Blob([JSON.stringify(config)], { type: 'application/json' });
+    let url = URL.createObjectURL(blob);
+    // Store the new URL so it can be revoked later
+    oldUrl = url;
     const a = document.createElement('a');
     a.href = url;
     a.innerText = "Download maze details";
@@ -517,6 +535,7 @@ settingsForm.addEventListener('submit', (event) => {
 
     settingsForm.reset();
     settingsFormDefaults(columns, rows, gridSize);
+    updateDownloadLink();
 });
 
 trainForm.addEventListener('submit', (event) => {
@@ -536,10 +555,10 @@ trainForm.addEventListener('submit', (event) => {
             totalTrainingPasses += passes;
             trainingPasses.innerText = totalTrainingPasses;
             trainingBanner.hidden = false;
+            updateDownloadLink();
         }); // runs async
         console.log("training started");
     }
-
     trainForm.reset();
     trainFormDefault(passes);
 });
@@ -560,11 +579,8 @@ solveForm.addEventListener('submit', (event) => {
     }
     else {
         solutionCompleteBanner.hidden = true;
-        downloadLink = document.getElementById('download-link');
         solutionTimeoutBanner.hidden = true;
-        if (downloadLink !== null) {
-            solutionCompleteBanner.removeChild(downloadLink);
-        }
+
         let steps = maze.solveFrom(startx, starty, limit);
         console.log("Done solving!");
         if (steps === limit) {
@@ -572,11 +588,9 @@ solveForm.addEventListener('submit', (event) => {
         }
         else {
             solutionCompleteSteps.innerText = steps;
-            solutionCompleteBanner.appendChild(makeDownloadMazeLink());
             solutionCompleteBanner.hidden = false;
         }
     }
-
     solveForm.reset();
     solveFormDefaults(startx, starty, limit);
 });
