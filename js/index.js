@@ -212,7 +212,8 @@ class RLHyperP {
                 gamma = 0.9, 
                 rIllegal = -0.75, 
                 rLegal = -0.1, 
-                rGoal = 10) {
+                rGoal = 10,
+                hiddenSize = 64) {
         this.epsilon = epsilon;
         this.epsilon_decay = epsilon_decay;
         this.alpha = alpha;
@@ -220,6 +221,7 @@ class RLHyperP {
         this.rIllegal = rIllegal;
         this.rLegal = rLegal;
         this.rGoal = rGoal;
+        this.hiddenSize = hiddenSize;
     }
 }
 
@@ -435,6 +437,7 @@ const trainingPasses = document.getElementById('training-passes');
 trainingBanner.hidden = true;
 let totalTrainingPasses = 0;
 let maze;
+const rLHP = new RLHyperP(); // to be filled with form and included in download
 
 // reset form with defaults
 function settingsFormDefaults(cols = 30, rows = 30, grid = 25) {
@@ -473,7 +476,8 @@ function makeDownloadMazeLink() {
     // legal moves, x, y, q, goal
     const cellInfo = maze.cellMatrix.flat().map((cell) =>
         { return {x: cell.x, y: cell.y, q: cell.q, legal: cell.legal, goal: cell.goal}; });
-    const blob = new Blob([JSON.stringify(cellInfo)], { type: 'application/json' });
+    const config = { cell_info: cellInfo, rlhp: rLHP};
+    const blob = new Blob([JSON.stringify(config)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
