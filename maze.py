@@ -18,25 +18,28 @@ class QNetwork(nn.Module):
         return x
 
 class MazeEnvironment:
-    def __init__(self, maze_file, config):
+    def __init__(self, maze_file):
         with open(maze_file, 'r') as f:
-            maze_data = json.load(f)
+            maze_def = json.load(f)
         
-        self.maze = {(cell['x'], cell['y']): cell for cell in maze_data}
-        self.config = config
+        self.maze = {(cell['x'], cell['y']): cell for cell in maze_def['cell_info']}
+        self.config = maze_def['rlhp']
+        self.starting_states = [state for state in self.maze.keys() if not self.maze[state]['goal']]
+        self.action_map = ['n', 's', 'e', 'w']
 
     def state_to_tensor(self, state):
         x, y = state
         tensor_state = torch.tensor([x, y], dtype=torch.float32)
         return tensor_state
 
-    def step(self, state, action):
+    def step(self, state, action_index):
+        action = self.action_map[action_index]
         x, y = state
         cell = self.maze.get((x, y))
         if not cell:
-            return state, self.config['rewards']['illegal'], False
+            return state, self.config['rIllegal'], False
 
-        if cell['legal']['action']:
+        if cell['legal'][action]:
             if action == 'n':
                 y -= 1
             elif action == 's':
@@ -46,48 +49,54 @@ class MazeEnvironment:
             elif action == 'w':
                 x -= 1
         else:
-            return state, self.config['rewards']['illegal'], False
+            return state, self.config['rIllegal'], False
 
         new_state = (x, y)
         if self.maze[new_state]['goal']:
-            reward = self.config['rewards']['goal']
+            reward = self.config['rGoal']
             done = True
         else:
-            reward = self.config['rewards']['legal']
+            reward = self.config['rLegal']
             done = False
 
         return new_state, reward, done
+    
+    def get_random_start_state(self):
+        return random.choice(self.starting_states)
 
-def train(model, environment, optimizer, config, device, epochs=1000):
+def train(model, environment, optimizer, device, epochs=1000):
+    config = environment.config
     epsilon = config['epsilon']
+    epsilon_decay = config['epsilon_decay']
     gamma = config['gamma']
     for epoch in range(epochs):
-        state = (0, 0)  # Assuming starting point
+        state = environment.get_random_start_state()
         done = False
         total_reward = 0
         while not done:
             state_tensor = environment.state_to_tensor(state).to(device)
             q_values = model(state_tensor)
             if random.random() < epsilon:
-                action = random.choice(['n', 's', 'e', 'w'])
+                action_index = random.randint(0, 3)  # Random action index (0 to 3)
             else:
-                action = torch.argmax(q_values).item()
-            next_state, reward, done = environment.step(state, action)
+                action_index = torch.argmax(q_values).item()
+            next_state, reward, done = environment.step(state, action_index)
+            #print(f"action index: {action_index}, next state: {next_state}, reward: {reward}. q_values: {q_values}")
             total_reward += reward
             next_state_tensor = environment.state_to_tensor(next_state).to(device)
             next_q_values = model(next_state_tensor)
             max_next_q = torch.max(next_q_values)
             target_q = reward + gamma * max_next_q
 
-            loss = nn.MSELoss()(q_values[action], target_q)
+            loss = nn.MSELoss()(q_values[action_index], target_q)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             state = next_state
-            epsilon *= config['epsilon_decay']  # Update epsilon
+            epsilon *= epsilon_decay  # Update epsilon
 
-        if epoch % 10 == 0:
-            print(f"Epoch {epoch}: Total Reward = {total_reward}")
+        #if epoch % 10 == 0:
+        print(f"Epoch {epoch}: Total Reward = {total_reward}")
 
 def extract_policy(model, environment, device):
     policy = {}
@@ -95,24 +104,19 @@ def extract_policy(model, environment, device):
         state = (x, y)
         state_tensor = environment.state_to_tensor(state).to(device)
         q_values = model(state_tensor)
-        action = torch.argmax(q_values).item()
-        policy[state] = ['n', 's', 'e', 'w'][action]
+        action_index = torch.argmax(q_values).item()
+        policy[state] = environment.action_map[action_index]
     return policy
 
-# Load configuration
-with open('path_to_hyperparameters_file.json', 'r') as f:
-    config = json.load(f)
-
 input_size = 2
-hidden_size = 64
 output_size = 4
-model = QNetwork(input_size, hidden_size, output_size)
+environment = MazeEnvironment('maze.json')
+model = QNetwork(input_size, environment.config['hiddenSize'], output_size)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model.to(device)
 
-optimizer = optim.Adam(model.parameters(), lr=config['alpha'])
-environment = MazeEnvironment('path_to_your_maze_file.json', config)
-train(model, environment, optimizer, config, device)
+optimizer = optim.Adam(model.parameters(), lr=environment.config['alpha'])
+train(model, environment, optimizer, device)
 
 # Extract and print the learned policy
 policy = extract_policy(model, environment, device)
