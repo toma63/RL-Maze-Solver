@@ -26,6 +26,42 @@
             <button type="submit" value="submit" name="submit" class="submit-button">Make Maze</button>
         </form><br>
         <div id="download-container"></div><br>
+        <h2>Hyperparameters</h2>
+        <form name="hyperparameters" class="vert-form">
+            <div class="form-item">
+                <label class="v-label" for="epsilon">epsilon:</label>
+                <input type="number" step="any" id="epsilon" name="epsilon" required="true" />
+            </div>
+            <div class="form-item">
+                <label class="v-label" for="epsilon_decay">epsilon_decay:</label>
+                <input type="number" step="any" id="epsilon_decay" name="epsilon_decay" required="true" />
+            </div>
+            <div class="form-item">
+                <label class="v-label" for="alpha">alpha:</label>
+                <input type="number" step="any" id="alpha" name="alpha" required="true" />
+            </div>
+            <div class="form-item">
+                <label class="v-label" for="gamma">gamma:</label>
+                <input type="number" step="any" id="gamma" name="gamma" required="true" />
+            </div>
+            <div class="form-item">
+                <label class="v-label" for="rIllegal">Illegal move reward:</label>
+                <input type="number" step="any" id="rIllegal" name="rIllegal" required="true" />
+            </div>
+            <div class="form-item">
+                <label class="v-label" for="rLegal">Legal move reward:</label>
+                <input type="number" step="any" id="rLegal" name="rLegal" required="true" />
+            </div>
+            <div class="form-item">
+                <label class="v-label" for="rGoal">Goal move reward:</label>
+                <input type="number" step="any" id="rGoal" name="rGoal" required="true" />
+            </div>
+            <div class="form-item">
+                <label class="v-label" for="hiddenSize">Hidden layer size:</label>
+                <input type="number" step="any" id="hiddenSize" name="hiddenSize" required="true" />
+            </div>
+            <button type="submit" value="submit" name="submit" class="hp-button">Update Values</button>
+        </form><br>
         <h2>Training</h2>
         <form name="train" class="form">
             <div class="form-item">

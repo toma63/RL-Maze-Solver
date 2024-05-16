@@ -425,6 +425,7 @@ class MazeCell {
 }
 
 let settingsForm = document.querySelector("[name='settings']");
+let hpForm = document.querySelector("[name='hyperparameters']")
 let trainForm = document.querySelector("[name='train']");
 let solveForm = document.querySelector("[name='solve']");
 const solutionCompleteBanner = document.getElementById('solution-complete');
@@ -438,13 +439,24 @@ trainingBanner.hidden = true;
 const downloadContainer = document.getElementById('download-container');
 let totalTrainingPasses = 0;
 let maze;
-const rLHP = new RLHyperP(); // to be filled with form and included in download
+const rlHP = new RLHyperP(); // to be filled with form and included in download
 
 // reset form with defaults
 function settingsFormDefaults(cols = 30, rows = 30, grid = 25) {
     settingsForm.columns.value = cols; 
     settingsForm.rows.value = rows; 
     settingsForm.gridSize.value = grid; 
+}
+
+function hpFormDefaults(rlHP) {
+    hpForm.epsilon.value = rlHP.epsilon;
+    hpForm.epsilon_decay.value = rlHP.epsilon_decay;
+    hpForm.alpha.value = rlHP.alpha;
+    hpForm.gamma.value = rlHP.gamma;
+    hpForm.rIllegal.value = rlHP.rIllegal;
+    hpForm.rLegal.value = rlHP.rLegal;
+    hpForm.rGoal.value = rlHP.rGoal;
+    hpForm.hiddenSize.value = rlHP.hiddenSize;
 }
 
 function trainFormDefault(passes = 2000) {
@@ -492,7 +504,7 @@ function makeDownloadMazeLink() {
     // legal moves, x, y, q, goal
     const cellInfo = maze.cellMatrix.flat().map((cell) =>
         { return {x: cell.x, y: cell.y, q: cell.q, legal: cell.legal, goal: cell.goal}; });
-    const config = { cell_info: cellInfo, rlhp: rLHP};
+    const config = { cell_info: cellInfo, rlhp: rlHP};
     let blob = new Blob([JSON.stringify(config)], { type: 'application/json' });
     let url = URL.createObjectURL(blob);
     // Store the new URL so it can be revoked later
@@ -511,6 +523,7 @@ if (window.innerWidth < 900) {
 else {
     settingsFormDefaults();
 }
+hpFormDefaults(rlHP);
 trainFormDefault();
 solveFormDefaults();
 
@@ -536,6 +549,25 @@ settingsForm.addEventListener('submit', (event) => {
     settingsForm.reset();
     settingsFormDefaults(columns, rows, gridSize);
     updateDownloadLink();
+});
+
+hpForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+
+    rlHP.epsilon = Number(event.target.epsilon.value);
+    rlHP.epsilon_decay = Number(event.target.epsilon_decay.value);
+    rlHP.alpha = Number(event.target.alpha.value);
+    rlHP.gamma = Number(event.target.gamma.value);
+    rlHP.rIllegal = Number(event.target.rIllegal.value);
+    rlHP.rLegal = Number(event.target.rLegal.value);
+    rlHP.rGoal = Number(event.target.rGoal.value);
+    rlHP.hiddenSize = Number(event.target.hiddenSize.value);
+
+    hpForm.reset();
+    hpFormDefaults(rlHP);
+    if (maze) {
+        updateDownloadLink();
+    }
 });
 
 trainForm.addEventListener('submit', (event) => {
