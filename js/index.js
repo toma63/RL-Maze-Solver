@@ -212,7 +212,8 @@ class RLHyperP {
                 gamma = 0.9, 
                 rIllegal = -0.75, 
                 rLegal = -0.1, 
-                rGoal = 10) {
+                rGoal = 10,
+                hiddenSize = 64) {
         this.epsilon = epsilon;
         this.epsilon_decay = epsilon_decay;
         this.alpha = alpha;
@@ -220,6 +221,7 @@ class RLHyperP {
         this.rIllegal = rIllegal;
         this.rLegal = rLegal;
         this.rGoal = rGoal;
+        this.hiddenSize = hiddenSize;
     }
 }
 
@@ -433,8 +435,10 @@ solutionTimeoutBanner.hidden = true;
 const trainingBanner = document.getElementById('training-banner');
 const trainingPasses = document.getElementById('training-passes');
 trainingBanner.hidden = true;
+const downloadContainer = document.getElementById('download-container');
 let totalTrainingPasses = 0;
 let maze;
+const rLHP = new RLHyperP(); // to be filled with form and included in download
 
 // reset form with defaults
 function settingsFormDefaults(cols = 30, rows = 30, grid = 25) {
@@ -467,14 +471,32 @@ function showButtons() {
     };
 }
 
+let oldUrl = null;
+function updateDownloadLink() {
+    downloadLink = document.getElementById('download-link');
+    if (downloadLink !== null) {
+        // Revoke the old object URL
+        if (oldUrl !== null) {
+            URL.revokeObjectURL(oldUrl);
+            oldUrl = null;
+            console.log("revoked old URL");
+        }
+        downloadContainer.removeChild(downloadLink);
+    }
+    downloadContainer.appendChild(makeDownloadMazeLink());
+}
+
 // Create a link to download the current state of the maze as JSON
 function makeDownloadMazeLink() {
     // get relevant maze data for download
     // legal moves, x, y, q, goal
     const cellInfo = maze.cellMatrix.flat().map((cell) =>
         { return {x: cell.x, y: cell.y, q: cell.q, legal: cell.legal, goal: cell.goal}; });
-    const blob = new Blob([JSON.stringify(cellInfo)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+    const config = { cell_info: cellInfo, rlhp: rLHP};
+    let blob = new Blob([JSON.stringify(config)], { type: 'application/json' });
+    let url = URL.createObjectURL(blob);
+    // Store the new URL so it can be revoked later
+    oldUrl = url;
     const a = document.createElement('a');
     a.href = url;
     a.innerText = "Download maze details";
@@ -513,6 +535,7 @@ settingsForm.addEventListener('submit', (event) => {
 
     settingsForm.reset();
     settingsFormDefaults(columns, rows, gridSize);
+    updateDownloadLink();
 });
 
 trainForm.addEventListener('submit', (event) => {
@@ -532,10 +555,10 @@ trainForm.addEventListener('submit', (event) => {
             totalTrainingPasses += passes;
             trainingPasses.innerText = totalTrainingPasses;
             trainingBanner.hidden = false;
+            updateDownloadLink();
         }); // runs async
         console.log("training started");
     }
-
     trainForm.reset();
     trainFormDefault(passes);
 });
@@ -556,11 +579,8 @@ solveForm.addEventListener('submit', (event) => {
     }
     else {
         solutionCompleteBanner.hidden = true;
-        downloadLink = document.getElementById('download-link');
         solutionTimeoutBanner.hidden = true;
-        if (downloadLink !== null) {
-            solutionCompleteBanner.removeChild(downloadLink);
-        }
+
         let steps = maze.solveFrom(startx, starty, limit);
         console.log("Done solving!");
         if (steps === limit) {
@@ -568,11 +588,9 @@ solveForm.addEventListener('submit', (event) => {
         }
         else {
             solutionCompleteSteps.innerText = steps;
-            solutionCompleteBanner.appendChild(makeDownloadMazeLink());
             solutionCompleteBanner.hidden = false;
         }
     }
-
     solveForm.reset();
     solveFormDefaults(startx, starty, limit);
 });
