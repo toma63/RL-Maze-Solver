@@ -15,15 +15,33 @@
     margin-right: 10px;
     margin-left: 10px;
 }
+.hp-button {
+    background-color:rgb(184, 207, 245);
+    border-radius: 0.25em;
+    margin-right: 10px;
+    margin-left: 10px;
+    margin-top: 1em;  
+    width: 10em;
+}
 .form {
     display: flex;
     flex-direction:row;
+}
+.vert-form {
+    display: flex;
+    flex-direction: column;
 }
 label {
     display: inline;
     padding-right: 10px;
     padding-left: 10px;
     width: 5em;
+}
+.v-label {
+    display: inline-block;
+    padding-right: 10px;
+    padding-left: 10px;
+    width: 9em;  
 }
 @media only screen and (max-width: 900px) {
     .form {
