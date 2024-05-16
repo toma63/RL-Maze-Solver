@@ -208,6 +208,7 @@ class Maze {
 class RLHyperP {
     constructor(epsilon = 0.3, 
                 epsilon_decay = 0.99, 
+                min_epsilon = 0.1,
                 alpha = 0.5, 
                 gamma = 0.9, 
                 rIllegal = -0.75, 
@@ -216,6 +217,7 @@ class RLHyperP {
                 hiddenSize = 64) {
         this.epsilon = epsilon;
         this.epsilon_decay = epsilon_decay;
+        this.min_epsilon = min_epsilon,
         this.alpha = alpha;
         this.gamma = gamma;
         this.rIllegal = rIllegal;
@@ -451,6 +453,7 @@ function settingsFormDefaults(cols = 30, rows = 30, grid = 25) {
 function hpFormDefaults(rlHP) {
     hpForm.epsilon.value = rlHP.epsilon;
     hpForm.epsilon_decay.value = rlHP.epsilon_decay;
+    hpForm.min_epsilon.value = rlHP.min_epsilon;
     hpForm.alpha.value = rlHP.alpha;
     hpForm.gamma.value = rlHP.gamma;
     hpForm.rIllegal.value = rlHP.rIllegal;
@@ -556,6 +559,7 @@ hpForm.addEventListener('submit', (event) => {
 
     rlHP.epsilon = Number(event.target.epsilon.value);
     rlHP.epsilon_decay = Number(event.target.epsilon_decay.value);
+    rlHP.min_epsilon = Number(event.target.min_epsilon.value);
     rlHP.alpha = Number(event.target.alpha.value);
     rlHP.gamma = Number(event.target.gamma.value);
     rlHP.rIllegal = Number(event.target.rIllegal.value);

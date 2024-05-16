@@ -68,6 +68,7 @@ def train(model, environment, optimizer, device, epochs=1000):
     config = environment.config
     epsilon = config['epsilon']
     epsilon_decay = config['epsilon_decay']
+    min_epsilon = config['min_epsilon']
     gamma = config['gamma']
     for epoch in range(epochs):
         state = environment.get_random_start_state()
@@ -93,7 +94,8 @@ def train(model, environment, optimizer, device, epochs=1000):
             loss.backward()
             optimizer.step()
             state = next_state
-            epsilon *= epsilon_decay  # Update epsilon
+            if epsilon > min_epsilon:
+                epsilon *= epsilon_decay  # Update epsilon
 
         #if epoch % 10 == 0:
         print(f"Epoch {epoch}: Total Reward = {total_reward}")
