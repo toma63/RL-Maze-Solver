@@ -217,7 +217,7 @@ class RLHyperP {
                 hiddenSize = 64) {
         this.epsilon = epsilon;
         this.epsilon_decay = epsilon_decay;
-        this.min_epsilon = min_epsilon,
+        this.min_epsilon = min_epsilon;
         this.alpha = alpha;
         this.gamma = gamma;
         this.rIllegal = rIllegal;
