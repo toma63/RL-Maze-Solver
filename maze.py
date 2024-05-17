@@ -22,6 +22,14 @@ class ReplayBuffer:
     def __len__(self):
         return len(self.buffer)
 
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import json
+import numpy as np
+import random
+from collections import deque
+
 class QNetwork(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super(QNetwork, self).__init__()
@@ -95,12 +103,30 @@ class MazeEnvironment:
     def update_epsilon(self, state):
         self.epsilon_map[state] = max(self.config['min_epsilon'], self.epsilon_map[state] * self.config['epsilon_decay'])
 
+class ReplayBuffer:
+    def __init__(self, capacity):
+        self.buffer = deque(maxlen=capacity)
+
+    def push(self, state, action, reward, next_state, done):
+        experience = (state, action, reward, next_state, done)
+        self.buffer.append(experience)
+
+    def sample(self, batch_size):
+        batch = random.sample(self.buffer, batch_size)
+        state, action, reward, next_state, done = map(np.array, zip(*batch))
+        return state, action, reward, next_state, done
+
+    def __len__(self):
+        return len(self.buffer)
+
 def update_target_network(target, source):
     target.load_state_dict(source.state_dict())
 
 def train(model, target_model, environment, optimizer, replay_buffer, device, epochs=1000, batch_size=64, target_update_frequency=100):
     config = environment.config
     gamma = config['gamma']
+    sample_frequency = batch_size * 10  # Frequency at which to sample from the buffer
+    steps_since_sample = 0  # Steps since the last sampling
     for epoch in range(epochs):
         state = environment.get_random_start_state()
         done = False
@@ -123,8 +149,10 @@ def train(model, target_model, environment, optimizer, replay_buffer, device, ep
             state = next_state
             steps += 1  # Increment step count for debugging
             environment.update_epsilon(state)  # Update epsilon for the current state
+            steps_since_sample += 1
 
-            if len(replay_buffer) > batch_size:
+            # Sample only if enough steps have passed since the last sample
+            if len(replay_buffer) >= batch_size and steps_since_sample >= sample_frequency:
                 states, actions, rewards, next_states, dones = replay_buffer.sample(batch_size)
 
                 states_tensor = torch.tensor(states, dtype=torch.float32).to(device)
@@ -141,6 +169,8 @@ def train(model, target_model, environment, optimizer, replay_buffer, device, ep
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
+
+                steps_since_sample = 0  # Reset the counter
 
         if epoch % 10 == 0:
             print(f"Epoch {epoch}: Total Reward = {total_reward}")
