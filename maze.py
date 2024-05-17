@@ -1,9 +1,34 @@
+import random
+from collections import deque
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import json
+import numpy as np
+
+class ReplayBuffer:
+    def __init__(self, capacity):
+        self.buffer = deque(maxlen=capacity)
+
+    def push(self, state, action, reward, next_state, done):
+        experience = (state, action, reward, next_state, done)
+        self.buffer.append(experience)
+
+    def sample(self, batch_size):
+        batch = random.sample(self.buffer, batch_size)
+        state, action, reward, next_state, done = map(np.array, zip(*batch))
+        return state, action, reward, next_state, done
+
+    def __len__(self):
+        return len(self.buffer)
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import json
 import numpy as np
 import random
+from collections import deque
 
 class QNetwork(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
@@ -11,11 +36,18 @@ class QNetwork(nn.Module):
         self.fc1 = nn.Linear(input_size, hidden_size)
         self.relu = nn.ReLU()
         self.fc2 = nn.Linear(hidden_size, output_size)
+        self.initialize_weights()
 
     def forward(self, x):
         x = self.relu(self.fc1(x))
         x = self.fc2(x)
         return x
+
+    def initialize_weights(self):
+        nn.init.xavier_uniform_(self.fc1.weight)
+        nn.init.xavier_uniform_(self.fc2.weight)
+        nn.init.zeros_(self.fc1.bias)
+        nn.init.zeros_(self.fc2.bias)
 
 class MazeEnvironment:
     def __init__(self, maze_file):
@@ -64,24 +96,42 @@ class MazeEnvironment:
     
     def get_random_start_state(self):
         return random.choice(self.starting_states)
-    
+
     def get_epsilon(self, state):
         return self.epsilon_map[state]
 
     def update_epsilon(self, state):
         self.epsilon_map[state] = max(self.config['min_epsilon'], self.epsilon_map[state] * self.config['epsilon_decay'])
 
+class ReplayBuffer:
+    def __init__(self, capacity):
+        self.buffer = deque(maxlen=capacity)
 
-def train(model, environment, optimizer, device, epochs=1000):
+    def push(self, state, action, reward, next_state, done):
+        experience = (state, action, reward, next_state, done)
+        self.buffer.append(experience)
+
+    def sample(self, batch_size):
+        batch = random.sample(self.buffer, batch_size)
+        state, action, reward, next_state, done = map(np.array, zip(*batch))
+        return state, action, reward, next_state, done
+
+    def __len__(self):
+        return len(self.buffer)
+
+def update_target_network(target, source):
+    target.load_state_dict(source.state_dict())
+
+def train(model, target_model, environment, optimizer, replay_buffer, device, epochs=1000, batch_size=64, target_update_frequency=100):
     config = environment.config
-    epsilon = config['epsilon']
-    epsilon_decay = config['epsilon_decay']
-    min_epsilon = config['min_epsilon']
     gamma = config['gamma']
+    sample_frequency = batch_size * 10  # Frequency at which to sample from the buffer
+    steps_since_sample = 0  # Steps since the last sampling
     for epoch in range(epochs):
         state = environment.get_random_start_state()
         done = False
         total_reward = 0
+        steps = 0  # Debugging steps per epoch
         while not done:
             state_tensor = environment.state_to_tensor(state).to(device)
             q_values = model(state_tensor)
@@ -91,27 +141,44 @@ def train(model, environment, optimizer, device, epochs=1000):
             else:
                 action_index = torch.argmax(q_values).item()
             next_state, reward, done = environment.step(state, action_index)
-            #print(f"action index: {action_index}, next state: {next_state}, reward: {reward}. q_values: {q_values}")
             total_reward += reward
             next_state_tensor = environment.state_to_tensor(next_state).to(device)
-            next_q_values = model(next_state_tensor)
-            max_next_q = torch.max(next_q_values)
-            target_q = reward + gamma * max_next_q
 
-            # Only update the Q-value for the taken action
-            target = q_values.clone().detach()
-            target[action_index] = target_q
+            replay_buffer.push(state, action_index, reward, next_state, done)
 
-            loss = nn.MSELoss()(q_values, target)
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-            environment.update_epsilon(state)
             state = next_state
+            steps += 1  # Increment step count for debugging
+            environment.update_epsilon(state)  # Update epsilon for the current state
+            steps_since_sample += 1
+
+            # Sample only if enough steps have passed since the last sample
+            if len(replay_buffer) >= batch_size and steps_since_sample >= sample_frequency:
+                states, actions, rewards, next_states, dones = replay_buffer.sample(batch_size)
+
+                states_tensor = torch.tensor(states, dtype=torch.float32).to(device)
+                actions_tensor = torch.tensor(actions, dtype=torch.int64).to(device)
+                rewards_tensor = torch.tensor(rewards, dtype=torch.float32).to(device)
+                next_states_tensor = torch.tensor(next_states, dtype=torch.float32).to(device)
+                dones_tensor = torch.tensor(dones, dtype=torch.float32).to(device)
+
+                current_q_values = model(states_tensor).gather(1, actions_tensor.unsqueeze(1)).squeeze(1)
+                next_q_values = target_model(next_states_tensor).max(1)[0]
+                target_q_values = rewards_tensor + gamma * next_q_values * (1 - dones_tensor)
+
+                loss = nn.MSELoss()(current_q_values, target_q_values)
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+
+                steps_since_sample = 0  # Reset the counter
 
         if epoch % 10 == 0:
             print(f"Epoch {epoch}: Total Reward = {total_reward}")
-            print(f"action index: {action_index}, epsilon: {epsilon}, reward: {reward}. q_values: {q_values}")
+            print(f"Steps taken in epoch {epoch}: {steps}")
+            print(f"Epsilon: {epsilon}")
+
+        if epoch % target_update_frequency == 0:
+            update_target_network(target_model, model)
 
 def extract_policy(model, environment, device):
     policy = {}
@@ -127,11 +194,16 @@ input_size = 2
 output_size = 4
 environment = MazeEnvironment('maze.json')
 model = QNetwork(input_size, environment.config['hiddenSize'], output_size)
+target_model = QNetwork(input_size, environment.config['hiddenSize'], output_size)
+update_target_network(target_model, model)
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model.to(device)
+target_model.to(device)
 
 optimizer = optim.Adam(model.parameters(), lr=environment.config['alpha'])
-train(model, environment, optimizer, device)
+replay_buffer = ReplayBuffer(10000)
+train(model, target_model, environment, optimizer, replay_buffer, device)
 
 # Extract and print the learned policy
 policy = extract_policy(model, environment, device)
