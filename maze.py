@@ -122,10 +122,10 @@ class ReplayBuffer:
 def update_target_network(target, source):
     target.load_state_dict(source.state_dict())
 
-def train(model, target_model, environment, optimizer, replay_buffer, device, epochs=1000, batch_size=64, target_update_frequency=100):
+def train(model, target_model, environment, optimizer, replay_buffer, device, epochs=1000, batch_size=64, target_update_frequency=50):
     config = environment.config
     gamma = config['gamma']
-    sample_frequency = batch_size * 10  # Frequency at which to sample from the buffer
+    sample_frequency = batch_size * 2  # Frequency at which to sample from the buffer
     steps_since_sample = 0  # Steps since the last sampling
     for epoch in range(epochs):
         state = environment.get_random_start_state()
@@ -142,7 +142,6 @@ def train(model, target_model, environment, optimizer, replay_buffer, device, ep
                 action_index = torch.argmax(q_values).item()
             next_state, reward, done = environment.step(state, action_index)
             total_reward += reward
-            next_state_tensor = environment.state_to_tensor(next_state).to(device)
 
             replay_buffer.push(state, action_index, reward, next_state, done)
 
