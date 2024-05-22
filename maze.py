@@ -22,14 +22,6 @@ class ReplayBuffer:
     def __len__(self):
         return len(self.buffer)
 
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import json
-import numpy as np
-import random
-from collections import deque
-
 class QNetwork(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super(QNetwork, self).__init__()
